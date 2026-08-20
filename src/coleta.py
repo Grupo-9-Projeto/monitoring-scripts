@@ -8,6 +8,9 @@ import time;
 #Função que coleta os dados do hardware
 def relatorio():
 
+     # primeiros dados da rede coletado
+    rede_inicio = psutil.net_io_counters()
+
     # uso da cpu
     cpu = psutil.cpu_percent(interval=2);
 
@@ -19,8 +22,7 @@ def relatorio():
     # Uso do disco
     disco = psutil.disk_usage('C:\\').percent;
 
-    # primeiros dados da rede coletado
-    rede_inicio = psutil.net_io_counters()
+   
 
     # ultimo dado da rede a ser coletado
     rede_fim = psutil.net_io_counters()
