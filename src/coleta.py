@@ -42,18 +42,7 @@ def relatorio():
     return [cpu, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu]
 
 
-# envio para o csv +  loop 
 
-with open('dados_maquina.csv', 'w', newline='') as csvfile:
-
-    csv.writer(csvfile, delimiter=',').writerow(["cpu", "ram", "disco", "Quando foi Coletado", "Rede recebida", "Rede enviada", 'Frequencia de uso da CPU'])
-
-while(True):
-    with open('dados_maquina.csv', 'a', newline='') as csvfile:
-
-        csv.writer(csvfile, delimiter=',').writerow(relatorio())
-
-    time.sleep(5)
 
 
 
