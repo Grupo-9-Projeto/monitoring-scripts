@@ -8,7 +8,9 @@ from coleta import relatorio
 
 with open('dados_maquina.csv', 'w', newline='') as csvfile:
 
-    csv.writer(csvfile, delimiter=',').writerow(["cpu", "ram", "disco", "Quando foi Coletado", "Rede recebida", "Rede enviada", 'Frequencia de uso da CPU'])
+    csv.writer(csvfile, delimiter=',').writerow(["cpu total","cpus_nucleos", "ram", "disco", "Quando foi Coletado", "Rede recebida", "Rede enviada", 'Frequencia de uso da CPU'])
+
+print("iniciando")
 
 while(True):
     with open('dados_maquina.csv', 'a', newline='') as csvfile:

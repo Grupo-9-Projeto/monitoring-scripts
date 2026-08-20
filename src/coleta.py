@@ -11,6 +11,8 @@ def relatorio():
     # uso da cpu
     cpu = psutil.cpu_percent(interval=2);
 
+    cpu_nucleos = psutil.cpu_percent(interval=None, percpu=True)
+
     #uso memória ram
     ram = psutil.virtual_memory().percent;
 
@@ -39,7 +41,7 @@ def relatorio():
 
   
 
-    return [cpu, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu]
+    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu]
 
 
 
