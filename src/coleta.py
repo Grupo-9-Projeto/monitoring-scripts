@@ -38,8 +38,8 @@ def relatorio():
     bytes_enviados = rede_fim.bytes_sent - rede_inicio.bytes_sent
     bytes_recebidos = rede_fim.bytes_recv - rede_inicio.bytes_recv
 
-    mbps_upload = round((bytes_enviados / 1024 * 1024),2)
-    mbps_download = round((bytes_recebidos / 1024 * 1024), 2)
+    mbps_upload = round(((bytes_enviados * 8 / 2) / (1024 * 1024)),2)
+    mbps_download = round(((bytes_recebidos * 8 / 2) / (1024 * 1024)), 2)
 
   
 
