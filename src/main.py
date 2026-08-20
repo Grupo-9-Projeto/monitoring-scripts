@@ -8,8 +8,8 @@ from coleta import relatorio
 
 with open('dados_maquina.csv', 'w', newline='') as csvfile:
     qtd = psutil.cpu_count(logical=True)
-    cpus = [f"cpu{i+1}" for i in range(qtd)]
-    csv.writer(csvfile, delimiter=',').writerow(["cpu total"] + cpus + [ "ram", "disco", "Quando foi Coletado", "Rede recebida", "Rede enviada", 'Frequencia de uso da CPU'])
+    cpus = [f"cpu{i+1}(%)" for i in range(qtd)]
+    csv.writer(csvfile, delimiter=',').writerow(["cpu total(%)"] + cpus + [ "ram(%)", "disco(%)", "Quando foi Coletado", "Rede recebida(Mbps)", "Rede enviada(Mbps)", 'Frequencia de uso da CPU(MHz)'])
 
 print("iniciando")
 
