@@ -31,7 +31,7 @@ def relatorio():
     data = datetime.now()
 
     # frquencia de uso cpu
-    freq_uso_cpu= psutil.cpu_freq() 
+    freq_uso_cpu= round(psutil.cpu_freq().current, 2) 
 
 
     # converção de dados da rede
