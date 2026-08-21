@@ -1,9 +1,11 @@
 
 # Importações de Biblioteca
 import psutil
+from getmac import get_mac_address
 import csv
 from datetime import datetime
 import time;
+
 
 #Função que coleta os dados do hardware
 def relatorio():
@@ -22,7 +24,8 @@ def relatorio():
     # Uso do disco
     disco = psutil.disk_usage('C:\\').percent;
 
-   
+    #endereço mac da máquina
+    mac = get_mac_address()
 
     # ultimo dado da rede a ser coletado
     rede_fim = psutil.net_io_counters()
@@ -43,7 +46,7 @@ def relatorio():
 
   
 
-    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu]
+    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu, mac]
 
 
 
