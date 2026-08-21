@@ -23,7 +23,7 @@ try:
             csv.writer(csvfile, delimiter=';').writerow([coleta[0]] + [coleta[1]] + [coleta[2]] + [coleta[3]] + [coleta[4]] + [coleta[5]] + [coleta[6]] + [coleta[7]] + [coleta[8]])
             cpu_nucleos = coleta[1]
             # cpus_individuais = " | ".join([f"cpu {i+1}: {cpu_nucleos[i]}%" for i in range(len(cpu_nucleos))])
-            print(f"CPU TOTAL: {coleta[0]}% | {cpu_nucleos} | RAM: {coleta[2]}% | Disco: {coleta[3]}% | Quando foi: {coleta[4]} | Rede recebida: {coleta[5]} Mbps | Rede enviada: {coleta[6]} Mbps | Frequencia: {coleta[7]} MHz | MAC: {coleta[8]}")
+            print(f"CPU TOTAL: {coleta[0]}% | Nucleos {cpu_nucleos} | RAM: {coleta[2]}% | Disco: {coleta[3]}% | Quando foi: {coleta[4]} | Rede recebida: {coleta[5]} Mbps | Rede enviada: {coleta[6]} Mbps | Frequencia: {coleta[7]} MHz | MAC: {coleta[8]}")
 
         time.sleep(5)
 except  KeyboardInterrupt:
