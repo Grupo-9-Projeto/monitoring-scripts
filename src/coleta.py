@@ -22,7 +22,7 @@ def relatorio():
     ram = psutil.virtual_memory().percent;
 
     # Uso do disco
-    disco = psutil.disk_usage('C:\\').percent;
+    disco = psutil.disk_usage('/').percent;
 
     #endereço mac da máquina
     mac = get_mac_address()
