@@ -17,6 +17,7 @@ def relatorio():
     cpu = psutil.cpu_percent(interval=2);
 
     cpu_nucleos = psutil.cpu_percent(interval=None, percpu=True)
+    cpu_nucleos = " | ".join([f"{v}%" for v in cpu_nucleos])
 
     #uso memória ram
     ram = psutil.virtual_memory().percent;
@@ -31,7 +32,7 @@ def relatorio():
     rede_fim = psutil.net_io_counters()
 
     # data hora e segundos da coleta de dados
-    data = datetime.now()
+    data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # frquencia de uso cpu
     freq_uso_cpu= round(psutil.cpu_freq().current, 2) 
