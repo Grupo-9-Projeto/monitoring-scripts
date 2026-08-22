@@ -20,7 +20,7 @@ try:
         coleta = relatorio()
         with open('dados_maquina.csv', 'a', newline='') as csvfile:
 
-            csv.writer(csvfile, delimiter=';').writerow([coleta[0]] + coleta[1] + [coleta[2] + coleta[3] , coleta[4] , coleta[5] , coleta[6] , coleta[7] , coleta[8]])
+            csv.writer(csvfile, delimiter=';').writerow([coleta[0]] + coleta[1] + [coleta[2] , coleta[3] , coleta[4] , coleta[5] , coleta[6] , coleta[7] , coleta[8]])
             cpu_nucleos = coleta[1]
             cpus_individuais = " ; ".join([f"cpu {i+1}: {cpu_nucleos[i]}%" for i in range(len(cpu_nucleos))])
             print(f"CPU TOTAL: {coleta[0]}% | {cpus_individuais} | RAM: {coleta[2]}% | Disco: {coleta[3]}% | Quando foi: {coleta[4]} | Rede recebida: {coleta[5]} Mbps | Rede enviada: {coleta[6]} Mbps | Frequencia: {coleta[7]} MHz | MAC: {coleta[8]}")
