@@ -17,10 +17,10 @@ def relatorio():
     cpu = psutil.cpu_percent(interval=2);
 
     cpu_nucleos = psutil.cpu_percent(interval=None, percpu=True)
-    cpu_nucleos = " | ".join([f"{v}%" for v in cpu_nucleos])
+#     cpu_nucleos = " ; ".join([f"{v}%" for v in cpu_nucleos])
 
     #uso memória ram
-    ram = psutil.virtual_memory().percent;
+    ram = round(psutil.virtual_memory().percent, 2);
 
     # Uso do disco
     disco = psutil.disk_usage('/').percent;
