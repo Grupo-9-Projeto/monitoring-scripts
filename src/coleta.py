@@ -81,7 +81,7 @@ def relatorio():
 
   
 
-    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu, mac, status_rede, descartados_sistema, tentativa_envio, corrompidos, dados_forcados, perda];
+    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu, mac, descartados_sistema, tentativa_envio, corrompidos, dados_forcados, perda];
 
 
 
