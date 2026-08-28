@@ -12,8 +12,9 @@ soma_cpu = 0;
 qtd_coleta = 0;
 
 def perda_pacotes():
+    parametro = "-n" if platform.system().lower() == "windows" else "-c"
     resultado = subprocess.run(
-        ["ping", "-n", "4", "8.8.8.8"],
+        ["ping", parametro, "4", "8.8.8.8"],
         capture_output=True,
         text=True
     )
@@ -21,7 +22,7 @@ def perda_pacotes():
     saida = resultado.stdout
 
     enviados = 4
-    recebidos = len(re.findall(r"TTL=", saida, re.IGNORECASE))
+    recebidos = len(re.findall(r"ttl=", saida, re.IGNORECASE))
 
     perda = ((enviados - recebidos) / enviados) * 100
 
