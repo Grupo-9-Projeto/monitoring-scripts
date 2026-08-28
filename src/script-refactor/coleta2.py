@@ -15,10 +15,10 @@ qtd_coleta = 0;
 def perda_pacotes():
     parametro = "-n" if platform.system().lower() == "windows" else "-c"
     resultado = subprocess.run(
-        ["ping", parametro, "4", "8.8.8.8"],
-        capture_output=True,
-        text=True
-    )
+            ["ping", parametro, "4", "8.8.8.8"],
+            capture_output=True,
+            text=True
+        )
 
     saida = resultado.stdout
 
@@ -58,7 +58,7 @@ def relatorio():
     data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # frquencia de uso cpu
-    freq_uso_cpu= round(psutil.cpu_freq().current, 2) 
+    # freq_uso_cpu= round(psutil.cpu_freq().current, 2) 
 
 
     # converção de dados da rede
@@ -83,7 +83,7 @@ def relatorio():
 
   
 
-    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu, mac, descartados_sistema, tentativa_envio, corrompidos, dados_forcados, perda];
+    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, mac, descartados_sistema, tentativa_envio, corrompidos, dados_forcados, perda];
 
 
 
