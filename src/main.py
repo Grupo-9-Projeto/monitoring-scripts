@@ -10,13 +10,13 @@ if not os.path.exists('dados_maquina.csv'):
     with open('dados_maquina.csv', 'w', newline='') as csvfile:
         qtd = psutil.cpu_count(logical=True)
         cpus = [f"cpu{i+1}(%)" for i in range(qtd)]
-        csv.writer(csvfile, delimiter=';').writerow(["cpu total(%)"] + cpus + [ "ram(%)", "disco(%)", "Quando foi Coletado", "Rede recebida(Mbps)", "Rede enviada(Mbps)", 'Frequencia de uso da CPU(MHz)', "Endereco MAC",  "Pacotes Descartados entrada", "Pacotes descartados saida", "erros entrada", "erros saida", "perda pacotes", "Tempo Ligado"])
+        csv.writer(csvfile, delimiter=';').writerow(["cpu total(%)"] + cpus + [ "ram(%)", "disco(%)", "Quando foi Coletado", "Rede recebida(Mbps)", "Rede enviada(Mbps)", 'Frequencia de uso da CPU(MHz)', "Endereco MAC",  "Pacotes Descartados entrada", "Pacotes descartados saida", "erros entrada", "erros saida", "perda pacotes"])
 
 
 print("iniciando")
 
 
-inicio_programa = datetime.now()
+# inicio_programa = datetime.now()
 
 try:
     while(True):
@@ -38,7 +38,7 @@ try:
     + [coleta[11]]
     + [coleta[12]]
     + [coleta[13]]
-    + [""]
+    # + [""]
 )
             cpu_nucleos = coleta[1]
 
@@ -49,21 +49,21 @@ try:
         time.sleep(3)
 except KeyboardInterrupt:
 
-    fim_programa = datetime.now()
+    # fim_programa = datetime.now()
 
-    tempo_ligado = fim_programa - inicio_programa
+    # tempo_ligado = fim_programa - inicio_programa
 
-    tempo_formatado = str(tempo_ligado).split('.')[0]
+    # tempo_formatado = str(tempo_ligado).split('.')[0]
 
-    qtd_cpus = psutil.cpu_count(logical=True)  
-
-    
-    total_colunas = 1 + qtd_cpus + 13
+    # qtd_cpus = psutil.cpu_count(logical=True)  
 
     
-    linha_final = [""] * (total_colunas-1) + [tempo_formatado]
+    # total_colunas = 1 + qtd_cpus + 13
 
-    with open('dados_maquina.csv', 'a', newline='') as csvfile:
-        csv.writer(csvfile, delimiter=';').writerow(linha_final)
+    
+    # linha_final = [""] * (total_colunas-1) + [tempo_formatado]
+
+    # with open('dados_maquina.csv', 'a', newline='') as csvfile:
+    #     csv.writer(csvfile, delimiter=';').writerow(linha_final)
 
     print("encerrado")
