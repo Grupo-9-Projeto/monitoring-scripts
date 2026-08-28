@@ -7,6 +7,7 @@ from datetime import datetime
 import time;
 import subprocess
 import re;
+import platform
 
 soma_cpu = 0;
 qtd_coleta = 0;
