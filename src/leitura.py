@@ -19,3 +19,18 @@ print(f"Média CPU última hora: {media_cpu_1h:.2f}%")
 pico_cpu_1h = uma_hora['cpu total(%)'].max()
 print(f"Pico CPU última hora: {pico_cpu_1h:.2f}%")
 
+
+max = 0
+cpu_maior = ""
+for i in df.columns:
+    if i.lower().startswith('cpu') and 'total' not in i.lower():
+        media_atual = uma_hora[i].mean()
+
+        if media_atual > max:
+            max = media_atual
+            cpu_maior = i
+
+
+
+print(f"CPU COM A MAIOR MÉDIA NA ULTIMA HORA: {cpu_maior} MÉDIA: {max}%")
+
