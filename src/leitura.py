@@ -34,3 +34,12 @@ for i in df.columns:
 
 print(f"CPU COM A MAIOR MÉDIA NA ULTIMA HORA: {cpu_maior} MÉDIA: {max}%")
 
+
+download_hora = uma_hora['Rede recebida(Mbps)'].mean()
+upload_hora = uma_hora['Rede enviada(Mbps)'].mean()
+# perda_hora = uma_hora['perda pacotes'].mean()
+
+print(f"Download médio (1h): {download_hora:.2f} Mbps")
+print(f"Upload médio (1h): {upload_hora:.2f} Mbps")
+# print(f"Perda média de pacotes (1h): {perda_hora:.2f}%")
+
