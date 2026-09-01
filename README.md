@@ -52,6 +52,7 @@ python main.py
 * Python
 * psutil
 * Pandas
+* getmac
 
 
 ---
