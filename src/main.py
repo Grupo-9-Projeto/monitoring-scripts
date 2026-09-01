@@ -19,7 +19,7 @@ print("iniciando")
 # inicio_programa = datetime.now()
 
 try:
-    while(True):
+    # while(True):
         coleta = relatorio()
         with open('dados_maquina.csv', 'a', newline='') as csvfile:
 
