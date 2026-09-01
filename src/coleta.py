@@ -37,7 +37,7 @@ def relatorio():
     rede_inicio = psutil.net_io_counters()
 
     # uso da cpu
-    cpu = psutil.cpu_percent(interval=2);
+    cpu = psutil.cpu_percent(interval=1);
 
     cpu_nucleos = psutil.cpu_percent(interval=None, percpu=True)
 #     cpu_nucleos = " ; ".join([f"{v}%" for v in cpu_nucleos])
