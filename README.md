@@ -7,7 +7,7 @@ Projeto desenvolvido em Python utilizando a biblioteca `psutil`.
 ## Funcionalidades
 
 * **Monitoramento de CPU:** Uso percentual por núcleo e frequência atual.
-* **Consumo de Memória:** Gráfico simples de uso da RAM e Swap.
+* **Consumo de Memória:** Gráfico simples de uso da RAM.
 * **Status do Disco:** Espaço livre, utilizado e taxa de leitura/escrita.
 * **Rede:** Monitoramento de upload e download em tempo real.
 
