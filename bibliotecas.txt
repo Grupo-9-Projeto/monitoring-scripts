@@ -1,3 +1,4 @@
 psutil
 getmac
 pandas
+mysql-connector-python
