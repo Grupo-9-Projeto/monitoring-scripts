@@ -29,7 +29,6 @@ if(cursor.fetchone()):
     query2 = "select t.nome, c.limiar_aviso, c.limiar_critico from dispositivo d join componente c on c.dispositivo_id = d.id_dispositivo join tipo_componente t on t.id_tipo = c.tipo_id where d.endereco_mac = %s"
     cursor.execute(query2, [mac])
     limiares = cursor.fetchall()
-    print(f"DEBUG - Limiares encontrados no banco: {limiares}")
 
     df = pd.read_csv('dados_maquina.csv', sep=';')
     ultima = df.iloc[-1]
