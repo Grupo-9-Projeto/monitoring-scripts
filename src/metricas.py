@@ -36,7 +36,7 @@ if(cursor.fetchone()):
 
 
 
-# df.iterows = metodo do pandas pra percorrer dataframe, primeiro elemento é o numero da linha e o segundo é as colunas 
+# df.iterows = metodo do pandas pra percorrer dataframe, primeiro elemento (i) é o numero da linha e o segundo (linha) é as colunas 
     for i, linha in df.iterrows():
         data = linha["Quando foi Coletado"]
         print(f"\ndata da leitura: {data} ------------------------\n")
@@ -48,20 +48,20 @@ if(cursor.fetchone()):
             critico = float(i[2])
 
             if tipo == 'cpu':
-                val = float(linha["cpu total(%)"])
+                valor = float(linha["cpu total(%)"])
             elif tipo == 'ram':
-                val = float(linha["ram(%)"])
+                valor = float(linha["ram(%)"])
             elif tipo == 'disco':
-                val = float(linha["disco(%)"])
+                valor = float(linha["disco(%)"])
             elif tipo == 'rede':
-                val = float(linha["Rede recebida(Mbps)"])
+                valor = float(linha["Rede recebida(Mbps)"])
 
-            if critico and val >= critico:
-                print(f"ALERTA CRITICO: {tipo} em {val}% (Limite: {critico}%)")
-            elif aviso and val >= aviso:
-                print(f"AVISO: {tipo} em {val}% (Limite: {aviso}%)")
+            if critico and valor >= critico:
+                print(f"ALERTA CRITICO: {tipo} em {valor}% (Limite: {critico}%)")
+            elif aviso and valor >= aviso:
+                print(f"AVISO: {tipo} em {valor}% (Limite: {aviso}%)")
             else:
-                print(f"OK: {tipo} em {val}%")
+                print(f"OK: {tipo} em {valor}%")
 
 else:
     print("seu mac NAO esta no banco")
