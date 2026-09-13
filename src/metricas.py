@@ -2,21 +2,15 @@ import mysql.connector
 from getmac import get_mac_address
 import csv
 import pandas as pd
-
+from config import cursor, conexao
 
 mac = get_mac_address()
 
-cnx = {'host': 'localhost',
-            'user': 'argos_user',
-            'password': 'sptech',
-            'database': 'argos_db'}
-
-conexao = mysql.connector.connect(**cnx)
 
 
 query = "select e.nome_fantasia from dispositivo d join empresa e on d.empresa_id = e.id_empresa where d.endereco_mac = (%s)"
 
-cursor = conexao.cursor()
+
 
 cursor.execute(query, [mac])
 
@@ -53,7 +47,7 @@ if(cursor.fetchone()):
             elif tipo == 'disco':
                 valor = float(linha["disco(%)"])
             elif tipo == 'rede':
-                valor = float(linha["Rede recebida(Mbps)"])
+                valor = float(linha["Rede recebida(Mbps)"]) 
 
             if critico and valor >= critico:
                 print(f"ALERTA CRITICO: {tipo} em {valor}% (Limite: {critico}%)")
