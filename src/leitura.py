@@ -1,6 +1,10 @@
 import pandas as pd
 import csv
 
+LIMIAR_CPU = 80.0   
+LIMIAR_RAM = 85.0   
+LIMIAR_REDE = 500.0
+
 df = pd.read_csv('dados_maquina.csv', sep=';')
 df.columns = df.columns.str.strip()
 df['Quando foi Coletado'] = pd.to_datetime(df['Quando foi Coletado'])

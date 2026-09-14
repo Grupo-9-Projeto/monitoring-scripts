@@ -5,7 +5,7 @@ import time
 from coleta import relatorio
 import psutil
 
-# envio para o csv +  loop 
+# envio para o csv 
 if not os.path.exists('dados_maquina.csv'):
     with open('dados_maquina.csv', 'w', newline='') as csvfile:
         qtd = psutil.cpu_count(logical=True)
