@@ -6,6 +6,7 @@ from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
+#pega os parametros do .env
 cnx = {
     'host': os.getenv('DB_HOST'),
     'user': os.getenv('DB_USER'),

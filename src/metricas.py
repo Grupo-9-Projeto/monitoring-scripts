@@ -10,7 +10,7 @@ from config import cursor, conexao
 mac = get_mac_address()
 
 
-
+#primeira query para verificar MAC no banco
 query = "select e.nome_fantasia from dispositivo d join empresa e on d.empresa_id = e.id_empresa where d.endereco_mac = (%s)"
 
 
@@ -23,17 +23,19 @@ cursor.execute(query, [mac])
 
 if(cursor.fetchone()):
     print(f"seu mac está no banco")
+    #query para verificar parametros de tipo e limiares
     query2 = "select t.nome, c.limiar_aviso, c.limiar_critico from dispositivo d join componente c on c.dispositivo_id = d.id_dispositivo join tipo_componente t on t.id_tipo = c.tipo_id where d.endereco_mac = %s"
     cursor.execute(query2, [mac])
     limiares = cursor.fetchall()
 
     df = pd.read_csv('dados_maquina.csv', sep=';')
-    ultima = df.iloc[-1]
+    
 
 
 
 # df.iterows = metodo do pandas pra percorrer dataframe, primeiro elemento (i) é o numero da linha e o segundo (linha) é as colunas 
     for i, linha in df.iterrows():
+        #na coluna quando foi coletado, com base no for
         data = linha["Quando foi Coletado"]
         print(f"\ndata da leitura: {data} ------------------------\n")
 

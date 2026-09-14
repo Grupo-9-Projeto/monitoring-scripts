@@ -15,7 +15,7 @@ mac = get_mac_address()
 
 
 
-
+#primeira query apenas pra verificar o MAC no banco
 query = "select e.nome_fantasia from dispositivo d join empresa e on d.empresa_id = e.id_empresa where d.endereco_mac = (%s)"
 
 
@@ -28,6 +28,7 @@ cursor.execute(query, [mac])
 
 if(cursor.fetchone()):
     print(f"seu mac está no banco")
+    #query pra verificar parametros do dispositivo
     query2 = "select t.nome from tipo_componente t join componente c on c.tipo_id = t.id_tipo join dispositivo d on d.id_dispositivo = c.dispositivo_id where d.endereco_mac = (%s)"
     cursor.execute(query2, [mac])
     limiares = cursor.fetchall()
