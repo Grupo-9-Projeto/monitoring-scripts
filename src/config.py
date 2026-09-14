@@ -1,3 +1,5 @@
+#configurações do banco, pegando do .env
+
 import os  
 import mysql.connector
 from dotenv import load_dotenv, find_dotenv

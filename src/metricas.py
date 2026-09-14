@@ -1,3 +1,6 @@
+#esse arquivo le cada linha do csv e retorna com base nos limiares do banco (sql) se esta ok, aviso ou critico
+
+
 import mysql.connector
 from getmac import get_mac_address
 import csv

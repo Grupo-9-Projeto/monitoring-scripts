@@ -1,3 +1,5 @@
+#esse script de captura, semelhante oq a main faz, só que usa os parametros do bd (sql)
+
 import csv
 from datetime import datetime
 import os
