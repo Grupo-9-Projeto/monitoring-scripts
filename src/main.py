@@ -5,65 +5,59 @@ import time
 from coleta import relatorio
 import psutil
 
-# envio para o csv 
-if not os.path.exists('dados_maquina.csv'):
-    with open('dados_maquina.csv', 'w', newline='') as csvfile:
-        qtd = psutil.cpu_count(logical=True)
-        cpus = [f"cpu{i+1}(%)" for i in range(qtd)]
-        csv.writer(csvfile, delimiter=';').writerow(["cpu total(%)"] + cpus + [ "ram(%)", "disco(%)", "Quando foi Coletado", "Rede recebida(Mbps)", "Rede enviada(Mbps)", 'Frequencia de uso da CPU(MHz)', "Endereco MAC",  "Pacotes Descartados entrada", "Pacotes descartados saida", "erros entrada", "erros saida", "perda pacotes"])
 
+PASTA_COLETAS = "coletas_hardware"
+if not os.path.exists(PASTA_COLETAS):
+    os.makedirs(PASTA_COLETAS)
 
-print("iniciando")
-
-
-# inicio_programa = datetime.now()
+print("Iniciando monitoramento...")
 
 try:
-    # while(True):
+    # Descomentar o while para rodar continuamente
+    while(True):
         coleta = relatorio()
-        with open('dados_maquina.csv', 'a', newline='') as csvfile:
+        timestamp = int(time.time())
+        nome_arquivo = f"{PASTA_COLETAS}/dados_{timestamp}.csv"
 
-            csv.writer(csvfile, delimiter=';').writerow(
-    [coleta[0]]
-    + coleta[1]
-    + [coleta[2]]
-    + [coleta[3]]
-    + [coleta[4]]
-    + [coleta[5]]
-    + [coleta[6]]
-    + [coleta[7]]
-    + [coleta[8]]
-    + [coleta[9]]
-    + [coleta[10]]
-    + [coleta[11]]
-    + [coleta[12]]
-    + [coleta[13]]
-    # + [""]
-)
+        with open(nome_arquivo, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
+
+            qtd_cpus = psutil.cpu_count(logical=True)
+            headers_cpus = [f"cpu{i+1}(%)" for i in range(qtd_cpus)]
+
+            headers = [
+                "cpu total(%)", "ram(%)", "disco(%)", "Quando foi Coletado", 
+                "Rede recebida(Mbps)", "Rede enviada(Mbps)", "Frequencia de uso da CPU(MHz)", 
+                "Endereco MAC", "Pacotes Descartados entrada", "Pacotes descartados saida", 
+                "erros entrada", "erros saida", "perda pacotes"
+            ] + headers_cpus
+
+            writer.writerow(headers)
+
             cpu_nucleos = coleta[1]
 
-            cpus_individuais = " | ".join([f"cpu {i+1}: {cpu_nucleos[i]}%" for i in range(len(cpu_nucleos))])
+            dados_linha = [
+                coleta[0],  # cpu total
+                coleta[2],  # ram
+                coleta[3],  # disco
+                coleta[4],  # Quando foi coletado
+                coleta[5],  # Rede recebida
+                coleta[6],  # Rede enviada
+                coleta[7],  # Frequencia
+                coleta[8],  # MAC
+                coleta[9],  # Descartes entrada
+                coleta[10], # Descartes saida
+                coleta[11], # Erros entrada
+                coleta[12], # Erros saida
+                coleta[13]  # Perda pacotes
+            ] + cpu_nucleos
 
-            print(f"CPU TOTAL: {coleta[0]}% | {cpus_individuais} | RAM: {coleta[2]}% | Disco: {coleta[3]}% | Quando foi: {coleta[4]} | Rede recebida: {coleta[5]} Mbps | Rede enviada: {coleta[6]} Mbps | Frequencia: {coleta[7]} MHz | MAC: {coleta[8]} | Descartados entrada: {coleta[9]} | Descartados saida: {coleta[10]} | Erros ent: {coleta[11]} | Erros sai: {coleta[12]} | Perda Ping: {coleta[13]}")
+            writer.writerow(dados_linha)
+
+        cpus_individuais = " | ".join([f"cpu {i+1}: {cpu_nucleos[i]}%" for i in range(len(cpu_nucleos))])
+        print(f"[{coleta[4]}] Salvo: {nome_arquivo} | CPU TOTAL: {coleta[0]}% | RAM: {coleta[2]}% | MAC: {coleta[8]}")
 
         time.sleep(3)
+
 except KeyboardInterrupt:
-
-    # fim_programa = datetime.now()
-
-    # tempo_ligado = fim_programa - inicio_programa
-
-    # tempo_formatado = str(tempo_ligado).split('.')[0]
-
-    # qtd_cpus = psutil.cpu_count(logical=True)  
-
-    
-    # total_colunas = 1 + qtd_cpus + 13
-
-    
-    # linha_final = [""] * (total_colunas-1) + [tempo_formatado]
-
-    # with open('dados_maquina.csv', 'a', newline='') as csvfile:
-    #     csv.writer(csvfile, delimiter=';').writerow(linha_final)
-
-    print("encerrado")
+    print("Monitoramento encerrado.")
