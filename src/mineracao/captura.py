@@ -5,21 +5,21 @@ from datetime import datetime
 import os
 import sys
 import time
-from mineracao.coleta import relatorio
+from coleta import relatorio
 import psutil
-from mineracao.config import cursor
+from config import cursor
 from getmac import get_mac_address
 import pandas as pd
 
 
 INTERVALO_COLETA = 10
-INTERVALO_LOTE = 5 * 60
+INTERVALO_LOTE = 30
 
 
 #primeira query apenas pra verificar o MAC no banco
 def dispositivo_cadastrado(mac):
     query = """select e.nome_fantasia from dispositivo d
-    join empresa e on d.empresa_id = e.id_empresa 
+    join empresa_cliente e on d.empresa_id = e.id_empresa 
     where d.endereco_mac = (%s)"""
 
     cursor.execute(query, [mac])
@@ -122,7 +122,7 @@ def salvar_lote(leituras, mac, inicio_lote):
 
     with open(nome_arquivo, "w", newline="") as csvfile:
 
-        writer = csv.writer(csvfile, delimiter=";")
+        writer = csv.writer(csvfile, delimiter=",")
 
         writer.writerow(criar_cabecalho())
 
