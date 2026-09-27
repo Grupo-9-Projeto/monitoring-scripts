@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 import os
 import time
-from coleta import relatorio
+from mineracao.coleta import relatorio
 import psutil
 
 

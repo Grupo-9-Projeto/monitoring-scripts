@@ -5,7 +5,7 @@ import mysql.connector
 from getmac import get_mac_address
 import csv
 import pandas as pd
-from config import cursor, conexao
+from mineracao.config import cursor, conexao
 
 mac = get_mac_address()
 
