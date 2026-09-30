@@ -1,4 +1,5 @@
 #script de captura, usa os parametros do bd para registrar os csvs e enviar pro s3
+#Em caso de erro no upload, VERIFIQUE O ARQUIVO: GUIA_AWS_CLI_COLETA.md
 
 import csv
 from datetime import datetime
@@ -10,6 +11,7 @@ import psutil
 from config import cursor
 from getmac import get_mac_address
 import pandas as pd
+from s3 import enviar_arquivo
 
 
 INTERVALO_COLETA = 10
@@ -187,11 +189,19 @@ def executar_captura():
         if tempo_decorrido >= INTERVALO_LOTE:
 
             #Grava as leituras em memória em um mesmo .csv
-            salvar_lote(
+            nome_arquivo = salvar_lote(
                 leituras,
                 mac,
                 inicio_lote
             )
+
+            enviar_arquivo(
+                nome_arquivo,
+                mac,
+                inicio_lote
+            )
+
+            os.remove(nome_arquivo)
 
             #limpa a lista para o próximo grupo de leituras
             leituras = []
