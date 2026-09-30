@@ -15,7 +15,7 @@ from s3 import enviar_arquivo
 
 
 INTERVALO_COLETA = 10
-INTERVALO_LOTE = 30
+INTERVALO_LOTE = 5 * 60
 
 
 #primeira query apenas pra verificar o MAC no banco
