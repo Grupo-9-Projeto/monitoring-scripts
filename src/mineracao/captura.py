@@ -11,11 +11,12 @@ import psutil
 from config import cursor
 from getmac import get_mac_address
 import pandas as pd
-from s3 import enviar_arquivo
+from s3 import enviar_arquivo_capturas, enviar_arquivo_processos
+from capturaProcessos import capturarProcessos
 
 
 INTERVALO_COLETA = 10
-INTERVALO_LOTE = 5 * 60
+INTERVALO_LOTE = 30
 
 
 #primeira query apenas pra verificar o MAC no banco
@@ -32,9 +33,9 @@ def dispositivo_cadastrado(mac):
 #Verifica quais são as métricas a serem monitoradas pelo dispositivo
 def obter_metricas_monitoradas(mac):
     query = """select t.nome from tipo_componente t join
-      componente c on c.tipo_id = t.id_tipo join 
-      dispositivo d on d.id_dispositivo = c.dispositivo_id 
-      where d.endereco_mac = (%s)"""
+    componente c on c.tipo_id = t.id_tipo join 
+    dispositivo d on d.id_dispositivo = c.dispositivo_id 
+    where d.endereco_mac = (%s)"""
 
     cursor.execute(query, [mac])
 
@@ -43,7 +44,7 @@ def obter_metricas_monitoradas(mac):
 
 
 #Organiza um registro em específico por linha de acordo com as métricas monitoradas
-def capturar_leitura(mac, metricas_monitoradas):
+def capturar_leitura(metricas_monitoradas):
 
     coleta = relatorio()
 
@@ -134,6 +135,15 @@ def salvar_lote(leituras, mac, inicio_lote):
 
     return nome_arquivo
 
+def salvar_csv_processos(processos, mac):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    nome_arquivo = f"processos_{mac.replace(':', '')}_{timestamp}.csv"
+    processos.to_csv(
+        nome_arquivo,
+        index=False
+    )
+    return nome_arquivo
 
 
 #Método principal
@@ -168,7 +178,6 @@ def executar_captura():
     while True:
 
         leitura = capturar_leitura(
-            mac,
             metricas_monitoradas
         )
 
@@ -188,6 +197,9 @@ def executar_captura():
         #Verifica se passaram os 5 minutos para guardar todas as leituras em um csv
         if tempo_decorrido >= INTERVALO_LOTE:
 
+            processos = capturarProcessos()
+            nome_arquivo_proc = salvar_csv_processos(processos, mac)
+
             #Grava as leituras em memória em um mesmo .csv
             nome_arquivo = salvar_lote(
                 leituras,
@@ -195,13 +207,20 @@ def executar_captura():
                 inicio_lote
             )
 
-            enviar_arquivo(
+            enviar_arquivo_capturas(
                 nome_arquivo,
                 mac,
                 inicio_lote
             )
 
+            enviar_arquivo_processos(
+                nome_arquivo_proc,
+                mac,
+                inicio_lote
+            )
+
             os.remove(nome_arquivo)
+            os.remove(nome_arquivo_proc)
 
             #limpa a lista para o próximo grupo de leituras
             leituras = []
