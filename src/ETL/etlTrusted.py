@@ -23,6 +23,31 @@ def ler_arquivo_s3(caminho_s3):
     return df
 
 
+def buscar_caminho_csv(prefixo):
+    paginator = s3.get_paginator('list_objects_v2')
+    paginas = paginator.paginate(
+        Bucket=BUCKET, 
+        Prefix=prefixo
+        )
+
+    arquivo_mais_recente = None
+    data_mais_recente = None
+
+    for pagina in paginas:
+        if 'Contents' in pagina:
+            for objeto in pagina['Contents']:
+                chave = objeto['Key']
+                
+                if chave.endswith('.csv'):
+                    data_modificacao = objeto['LastModified']
+                    
+                    if data_mais_recente is None or data_modificacao > data_mais_recente:
+                        data_mais_recente = data_modificacao
+                        arquivo_mais_recente = chave
+
+    return arquivo_mais_recente
+
+
 # ===============================Corrigindo tipagem dos campos
 def corrige_datetime(df, coluna):
 
@@ -165,7 +190,7 @@ def salvar_trusted(df, caminho_raw):
 # ================================TESTE
 if __name__ == "__main__":
 
-    caminho = "CAMINHO/CSV/RAW"
+    caminho = buscar_caminho_csv("raw/dispositivos/capturas/")
 
     df = ler_arquivo_s3(caminho)
 
