@@ -163,6 +163,10 @@ def executar_captura():
     #obtém métricas de acordo com o mac adress
     metricas_monitoradas = obter_metricas_monitoradas(mac)
 
+    if not metricas_monitoradas:
+        print("Dispositivo sem componentes cadastrados. Cadastre CPU, RAM, Disco e Rede na tabela 'componente'.")
+        return
+
     print(
         "Métricas monitoradas:",
         [item[0] for item in metricas_monitoradas]
