@@ -2,7 +2,7 @@ import boto3
 import pandas as pd
 from io import BytesIO
 
-BUCKET = "nome_bucket_s3"
+BUCKET = "NOME_BUCKET_S3"
 
 s3 = boto3.client("s3")
 
@@ -22,31 +22,55 @@ def ler_arquivo_s3(caminho_s3):
 
     return df
 
+def listar_arquivos_s3(prefixo):
 
-def buscar_caminho_csv(prefixo):
-    paginator = s3.get_paginator('list_objects_v2')
-    paginas = paginator.paginate(
-        Bucket=BUCKET, 
+    arquivos = set()
+
+    paginador = s3.get_paginator("list_objects_v2")
+
+    for pagina in paginador.paginate(
+        Bucket=BUCKET,
         Prefix=prefixo
+    ):
+        for objeto in pagina.get("Contents", []):
+            arquivos.add(objeto["Key"])
+
+    return arquivos
+
+
+
+def buscar_arquivos_pendentes(
+    prefixo_origem,
+    prefixo_destino,
+    extensao_origem=".csv",
+    extensao_destino=".csv"
+):
+
+    arquivos_origem = listar_arquivos_s3(prefixo_origem)
+    arquivos_destino = listar_arquivos_s3(prefixo_destino)
+
+    pendentes = []
+
+    for caminho_origem in arquivos_origem:
+
+        if not caminho_origem.endswith(extensao_origem):
+            continue
+
+        caminho_destino = caminho_origem.replace(
+            prefixo_origem,
+            prefixo_destino,
+            1
         )
 
-    arquivo_mais_recente = None
-    data_mais_recente = None
+        caminho_destino = (
+            caminho_destino[:-len(extensao_origem)]
+            + extensao_destino
+        )
 
-    for pagina in paginas:
-        if 'Contents' in pagina:
-            for objeto in pagina['Contents']:
-                chave = objeto['Key']
-                
-                if chave.endswith('.csv'):
-                    data_modificacao = objeto['LastModified']
-                    
-                    if data_mais_recente is None or data_modificacao > data_mais_recente:
-                        data_mais_recente = data_modificacao
-                        arquivo_mais_recente = chave
+        if caminho_destino not in arquivos_destino:
+            pendentes.append(caminho_origem)
 
-    return arquivo_mais_recente
-
+    return pendentes
 
 # ===============================Corrigindo tipagem dos campos
 def corrige_datetime(df, coluna):
@@ -190,15 +214,17 @@ def salvar_trusted(df, caminho_raw):
 # ================================TESTE
 if __name__ == "__main__":
 
-    caminho = buscar_caminho_csv("raw/dispositivos/capturas/")
+    caminhos = buscar_arquivos_pendentes("raw/dispositivos/capturas/", "trusted/dispositivos/capturas")
 
-    df = ler_arquivo_s3(caminho)
+    for caminho in caminhos:
+        
+        df = ler_arquivo_s3(caminho)
 
-    df = corrigirTipos(df)
+        df = corrigirTipos(df)
 
-    df = validar_dados(df)
+        df = validar_dados(df)
 
-    salvar_trusted(df, caminho)
+        salvar_trusted(df, caminho)
 
 
 
