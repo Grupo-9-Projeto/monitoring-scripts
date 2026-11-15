@@ -1,8 +1,14 @@
 import boto3
 import pandas as pd
 from io import BytesIO
+import os
+from dotenv import load_dotenv
 
-BUCKET = "NOME_BUCKET_S3"
+load_dotenv()
+
+BUCKET = os.getenv("S3_BUCKET")
+if not BUCKET:
+    raise RuntimeError("Variável de ambiente S3_BUCKET não definida.")
 
 s3 = boto3.client("s3")
 
