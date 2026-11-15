@@ -223,11 +223,13 @@ def adicionar_dados_processos(df, caminho_raw):
             "cpu_percent",
             lambda x: df_processos.loc[x.idxmax(), "name"]
         ),
+        cpu_processo_maior_cpu=("cpu_percent", "max"),
 
         processo_maior_ram=(
             "ram_percent",
             lambda x: df_processos.loc[x.idxmax(), "name"]
-        )
+        ),
+        ram_processo_maior_ram=("ram_percent", "max")
 
     ).reset_index()
 
