@@ -2,7 +2,7 @@ import boto3
 import pandas as pd
 from io import BytesIO
 
-BUCKET = "NOME_BUCKET_S3"
+BUCKET = "argos-bucket-teste"
 
 s3 = boto3.client("s3")
 
