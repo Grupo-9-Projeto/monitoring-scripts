@@ -79,11 +79,12 @@ def filtra_colunas_df(df):
         "cpu total(%)",
         "ram(%)",
         "perda pacotes",
-        "disco(%)"
+        "disco(%)",
+        "Frequencia de uso da CPU(MHz)"
     ]
 
     df = df[colunas].copy()
-
+    
     return df
 
 
@@ -99,8 +100,6 @@ def gerar_caminho_client(caminho_trusted):
 
 
 def salvar_client(df, caminho_trusted):
-    buffer = BytesIO()
-
     caminho_client = gerar_caminho_client(caminho_trusted)
 
     conteudo_json = df.to_json(
@@ -129,7 +128,7 @@ def salvar_client(df, caminho_trusted):
 if __name__ == "__main__":
 
     caminhos = buscar_arquivos_pendentes(
-        "trusted/dispositivos/capturas/", "client/dispositivos/capturas"
+        "trusted/dispositivos/capturas/", "client/dispositivos/capturas/"
     )
 
     print(f"Arquivos pendentes: {len(caminhos)}")
