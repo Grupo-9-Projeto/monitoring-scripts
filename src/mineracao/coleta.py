@@ -31,7 +31,9 @@ def perda_pacotes():
 
 
 #Função que coleta os dados do hardware
-def relatorio():
+def relatorio(timestamp):
+
+    data = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
      # primeiros dados da rede coletado
     rede_inicio = psutil.net_io_counters()
@@ -83,7 +85,7 @@ def relatorio():
 
   
 
-    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu, mac, descartados_sistema, tentativa_envio, corrompidos, dados_forcados, perda];
+    return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu, mac, descartados_sistema, tentativa_envio, corrompidos, dados_forcados, perda, data];
 
 
 

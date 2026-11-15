@@ -1,7 +1,7 @@
 import boto3
 
 
-BUCKET = "NOME_DO_BUCKET"
+BUCKET = "argos-bucket-teste"
 #Em caso de erro no upload, VERIFIQUE O ARQUIVO: GUIA_AWS_CLI_COLETA.md
 
 

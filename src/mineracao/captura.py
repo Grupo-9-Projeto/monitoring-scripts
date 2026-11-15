@@ -44,9 +44,9 @@ def obter_metricas_monitoradas(mac):
  
  
 #Organiza um registro em específico por linha de acordo com as métricas monitoradas
-def capturar_leitura(metricas_monitoradas):
+def capturar_leitura(metricas_monitoradas, timestamp, timestamp_lote):
  
-    coleta = relatorio()
+    coleta = relatorio(timestamp)
  
 #Faz com que a comparação ignore o case 
     metricas = {
@@ -104,6 +104,8 @@ def capturar_leitura(metricas_monitoradas):
         dados.append(coleta[13])
     else:
         dados.extend([""] * 5)
+
+    dados.append(timestamp_lote.strftime("%Y-%m-%d %H:%M:%S"))
  
     return dados
  
@@ -124,7 +126,8 @@ def criar_cabecalho():
         "Pacotes descartados saida",
         "erros entrada",
         "erros saida",
-        "perda pacotes"
+        "perda pacotes",
+        "timestamp_lote"
     ]
  
     return cabecalho
@@ -149,8 +152,8 @@ def salvar_lote(leituras, mac, inicio_lote):
  
     return nome_arquivo
  
-def salvar_csv_processos(processos, mac):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+def salvar_csv_processos(processos, mac, inicio_lote):
+    timestamp = inicio_lote.strftime("%Y%m%d_%H%M%S")
  
     nome_arquivo = f"processos_{mac.replace(':', '')}_{timestamp}.csv"
     processos.to_csv(
@@ -192,11 +195,17 @@ def executar_captura():
     inicio_lote_monotonic = time.monotonic()
  
     print("Iniciando monitoramento...")
+
  
     while True:
- 
+
+        timestamp = datetime.now()
+
+
         leitura = capturar_leitura(
-            metricas_monitoradas
+            metricas_monitoradas,
+            timestamp,
+            inicio_lote
         )
  
         #Guarda a leitura em memória, em uma lista de leituras
@@ -215,8 +224,8 @@ def executar_captura():
         #Verifica se passaram os 5 minutos para guardar todas as leituras em um csv
         if tempo_decorrido >= INTERVALO_LOTE:
  
-            processos = capturarProcessos()
-            nome_arquivo_proc = salvar_csv_processos(processos, mac)
+            processos = capturarProcessos(inicio_lote)
+            nome_arquivo_proc = salvar_csv_processos(processos, mac, inicio_lote)
  
             #Grava as leituras em memória em um mesmo .csv
             nome_arquivo = salvar_lote(
