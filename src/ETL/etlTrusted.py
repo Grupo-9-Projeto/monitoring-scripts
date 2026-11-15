@@ -276,7 +276,7 @@ def salvar_trusted(df, caminho_raw):
 # ================================TESTE
 if __name__ == "__main__":
 
-    caminhos = buscar_arquivos_pendentes("raw/dispositivos/capturas/", "trusted/dispositivos/capturas")
+    caminhos = buscar_arquivos_pendentes("raw/dispositivos/capturas/", "trusted/dispositivos/capturas/")
 
     for caminho in caminhos:
         
