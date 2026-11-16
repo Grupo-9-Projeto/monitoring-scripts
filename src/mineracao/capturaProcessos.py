@@ -1,12 +1,12 @@
 import psutil
 import pandas as pd
+from getmac import get_mac_address
 from datetime import datetime
 import time
 
-def capturarProcessos():
+def capturarProcessos(timestamp_lote):
     processos = []
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") 
-
+    data_lote = timestamp_lote.strftime("%Y-%m-%d %H:%M:%S")
 
     for processo in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent', 'username', 'create_time']): 
         processos.append({
@@ -16,8 +16,11 @@ def capturarProcessos():
             'ram_percent': processo.info['memory_percent'],
             'username': processo.info['username'],
             'create_time': processo.info['create_time'],
-            'timestamp': timestamp
+            'timestamp_lote': data_lote,
+            'Endereco MAC': get_mac_address()
+
         })
+
         
 
     return pd.DataFrame(processos);

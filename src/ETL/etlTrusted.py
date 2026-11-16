@@ -82,7 +82,8 @@ def buscar_arquivos_pendentes(
 def corrige_datetime(df, coluna):
 
     df[coluna] = pd.to_datetime(
-        df[coluna]
+        df[coluna],
+        format="%Y-%m-%d %H:%M:%S"
     )
 
     return df
@@ -161,6 +162,7 @@ def corrigirTipos(df):
     df = corrige_string(df, "Endereco MAC")
 # Datetime
     df = corrige_datetime(df, "Quando foi Coletado")
+    df = corrige_datetime(df, "timestamp_lote")
 
     return df
 
@@ -186,6 +188,68 @@ def validar_dados(df):
     df = validar_mac(df, "Endereco MAC")
 
     return df
+
+#ADIÇÃO DE COLUNAS
+
+
+def adicionar_dados_processos(df, caminho_raw):
+
+    caminho_processos = caminho_raw.replace(
+        "raw/dispositivos/capturas/",
+        "raw/dispositivos/processos/",
+        1
+    ).replace(
+        "dados_",
+        "processos_",
+        1
+    )
+
+    df_processos = ler_arquivo_s3(caminho_processos)
+
+    # Corrige os tipos de dados
+    df_processos["timestamp_lote"] = pd.to_datetime(
+        df_processos["timestamp_lote"]
+    )
+
+    df_processos["cpu_percent"] = pd.to_numeric(
+        df_processos["cpu_percent"], errors="coerce"
+    ).fillna(0)
+
+    df_processos["ram_percent"] = pd.to_numeric(
+        df_processos["ram_percent"], errors="coerce"
+    ).fillna(0)
+
+    # Agrupa os processos por MAC e lote
+    resumo = df_processos.groupby(
+        ["Endereco MAC", "timestamp_lote"]
+    ).agg(
+        quantidade_processos=("pid", "count"),
+
+        processo_maior_cpu=(
+            "cpu_percent",
+            lambda x: df_processos.loc[x.idxmax(), "name"]
+        ),
+        cpu_processo_maior_cpu=("cpu_percent", "max"),
+
+        processo_maior_ram=(
+            "ram_percent",
+            lambda x: df_processos.loc[x.idxmax(), "name"]
+        ),
+        ram_processo_maior_ram=("ram_percent", "max")
+
+    ).reset_index()
+
+    # Junta os dados do lote às capturas individuais
+    df = df.merge(
+        resumo,
+        on=["Endereco MAC", "timestamp_lote"],
+        how="left"
+    )
+
+    return df
+
+
+
 
 
 def gerar_caminho_trusted(caminho_raw):
@@ -229,6 +293,8 @@ if __name__ == "__main__":
         df = corrigirTipos(df)
 
         df = validar_dados(df)
+
+        df = adicionar_dados_processos(df, caminho);
 
         salvar_trusted(df, caminho)
 

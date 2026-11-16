@@ -86,7 +86,12 @@ def filtra_colunas_df(df):
         "ram(%)",
         "perda pacotes",
         "disco(%)",
-        "Frequencia de uso da CPU(MHz)"
+        "Frequencia de uso da CPU(MHz)",
+        "quantidade_processos",
+        "processo_maior_ram",
+        "ram_processo_maior_ram",
+        "processo_maior_cpu",
+        "cpu_processo_maior_cpu"
     ]
 
     df = df[colunas].copy()
