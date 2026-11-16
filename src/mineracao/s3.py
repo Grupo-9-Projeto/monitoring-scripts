@@ -1,7 +1,12 @@
 import boto3
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
-BUCKET = "argos-bucket-teste"
+BUCKET = os.getenv("S3_BUCKET")
+if not BUCKET:
+    raise RuntimeError("Variável de ambiente S3_BUCKET não definida.")
 #Em caso de erro no upload, VERIFIQUE O ARQUIVO: GUIA_AWS_CLI_COLETA.md
 
 
