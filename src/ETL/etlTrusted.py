@@ -1,76 +1,41 @@
+import os
+import re
+import json
+import base64
+import urllib.parse
+import urllib.request
+from datetime import datetime, timedelta, timezone
+from io import BytesIO
+from urllib.parse import unquote_plus
+
 import boto3
 import pandas as pd
-from io import BytesIO
 
-BUCKET = "argos-bucket-teste"
+# Horario de Brasilia
+try:
+    from zoneinfo import ZoneInfo
+    FUSO = ZoneInfo("America/Sao_Paulo")
+except Exception:
+    FUSO = timezone(timedelta(hours=-3))
 
 s3 = boto3.client("s3")
 
 
+PREFIXO_ENTRADA = "raw/dispositivos/processos/"
+
+# Chamados do Jira 
+CAMINHO_CHAMADOS = "trusted/chamados/chamados.csv"
+DIAS_DE_HISTORICO = 70      
+
+
 # ==============================LENDO S3
-def ler_arquivo_s3(caminho_s3):
-    resposta = s3.get_object(
-        Bucket = BUCKET,
-        Key=caminho_s3
-    )
+def ler_arquivo_s3(bucket, caminho_s3):
+    resposta = s3.get_object(Bucket=bucket, Key=caminho_s3)
 
     conteudo = resposta["Body"].read()
 
-    df = pd.read_csv(
-        BytesIO(conteudo)
-    )
+    return pd.read_csv(BytesIO(conteudo))
 
-    return df
-
-def listar_arquivos_s3(prefixo):
-
-    arquivos = set()
-
-    paginador = s3.get_paginator("list_objects_v2")
-
-    for pagina in paginador.paginate(
-        Bucket=BUCKET,
-        Prefix=prefixo
-    ):
-        for objeto in pagina.get("Contents", []):
-            arquivos.add(objeto["Key"])
-
-    return arquivos
-
-
-
-def buscar_arquivos_pendentes(
-    prefixo_origem,
-    prefixo_destino,
-    extensao_origem=".csv",
-    extensao_destino=".csv"
-):
-
-    arquivos_origem = listar_arquivos_s3(prefixo_origem)
-    arquivos_destino = listar_arquivos_s3(prefixo_destino)
-
-    pendentes = []
-
-    for caminho_origem in arquivos_origem:
-
-        if not caminho_origem.endswith(extensao_origem):
-            continue
-
-        caminho_destino = caminho_origem.replace(
-            prefixo_origem,
-            prefixo_destino,
-            1
-        )
-
-        caminho_destino = (
-            caminho_destino[:-len(extensao_origem)]
-            + extensao_destino
-        )
-
-        if caminho_destino not in arquivos_destino:
-            pendentes.append(caminho_origem)
-
-    return pendentes
 
 # ===============================Corrigindo tipagem dos campos
 def corrige_datetime(df, coluna):
@@ -183,10 +148,11 @@ def validar_dados(df):
 
     return df
 
+
 #ADIÇÃO DE COLUNAS
 
 
-def adicionar_dados_processos(df, caminho_raw):
+def adicionar_dados_processos(df, bucket, caminho_raw):
 
     caminho_processos = caminho_raw.replace(
         "raw/dispositivos/capturas/",
@@ -198,9 +164,8 @@ def adicionar_dados_processos(df, caminho_raw):
         1
     )
 
-    df_processos = ler_arquivo_s3(caminho_processos)
+    df_processos = ler_arquivo_s3(bucket, caminho_processos)
 
-    # Corrige os tipos de dados
     df_processos["timestamp_lote"] = pd.to_datetime(
         df_processos["timestamp_lote"]
     )
@@ -233,7 +198,6 @@ def adicionar_dados_processos(df, caminho_raw):
 
     ).reset_index()
 
-    # Junta os dados do lote às capturas individuais
     df = df.merge(
         resumo,
         on=["Endereco MAC", "timestamp_lote"],
@@ -243,55 +207,167 @@ def adicionar_dados_processos(df, caminho_raw):
     return df
 
 
-
+def gerar_caminho_capturas(caminho_processos):
+    return caminho_processos.replace(
+        "raw/dispositivos/processos/",
+        "raw/dispositivos/capturas/",
+        1
+    ).replace(
+        "processos_",
+        "dados_",
+        1
+    )
 
 
 def gerar_caminho_trusted(caminho_raw):
-    caminho_trusted = caminho_raw.replace(
-        "raw/", "trusted/", 1
-    )
-
-    return caminho_trusted
+    return caminho_raw.replace("raw/", "trusted/", 1)
 
 
-def salvar_trusted(df, caminho_raw):
-    buffer = BytesIO()
-
+def salvar_trusted(df, bucket, caminho_raw):
     caminho_trusted = gerar_caminho_trusted(caminho_raw)
 
-    df.to_csv(
-        buffer,
-        index=False
-    )
+    conteudo_csv = df.to_csv(index=False)
 
-    buffer.seek(0)
-
-    s3.upload_fileobj(
-        buffer,
-        BUCKET,
-        caminho_trusted
+    s3.put_object(
+        Bucket=bucket,
+        Key=caminho_trusted,
+        Body=conteudo_csv.encode("utf-8")
     )
 
     print(f"Arquivo salvo em: {caminho_trusted}")
 
 
-# ================================TESTE
-if __name__ == "__main__":
+# ==================================CHAMADOS DO JIRA
 
-    caminhos = buscar_arquivos_pendentes("raw/dispositivos/capturas/", "trusted/dispositivos/capturas/")
+def converter_data_do_jira(texto):
+    data = datetime.strptime(texto, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return data.astimezone(FUSO).strftime("%Y-%m-%d %H:%M:%S")
 
-    for caminho in caminhos:
-        
-        df = ler_arquivo_s3(caminho)
+
+def extrair_mac(descricao):
+    achou = re.search(r"MAC\):\s*([0-9A-Fa-f:]{17})", descricao or "")
+    if not achou:
+        return None
+    return achou.group(1).lower()
+
+
+def buscar_chamados_no_jira():
+    url = os.getenv("JIRA_URL")
+    email = os.getenv("JIRA_EMAIL")
+    token = os.getenv("JIRA_TOKEN")
+    projeto = os.getenv("JIRA_PROJECT_KEY")
+
+    if not (url and email and token and projeto):
+        raise Exception("Faltam variáveis JIRA_URL, JIRA_EMAIL, JIRA_TOKEN ou JIRA_PROJECT_KEY")
+
+    login = base64.b64encode(f"{email}:{token}".encode()).decode()
+    jql = f"project = {projeto} AND created >= -{DIAS_DE_HISTORICO}d ORDER BY created ASC"
+
+    chamados = []
+    proxima_pagina = None
+
+    # o jira devolve os chamados em paginas de ate 100
+    while True:
+        endereco = (
+            f"{url}/rest/api/2/search/jql?jql={urllib.parse.quote(jql)}"
+            "&fields=description,created,resolutiondate&maxResults=100"
+        )
+        if proxima_pagina:
+            endereco += "&nextPageToken=" + urllib.parse.quote(proxima_pagina)
+
+        pedido = urllib.request.Request(endereco, headers={
+            "Authorization": "Basic " + login,
+            "Accept": "application/json"
+        })
+        with urllib.request.urlopen(pedido, timeout=20) as resposta:
+            corpo = json.loads(resposta.read().decode("utf-8"))
+
+        for issue in corpo.get("issues", []):
+            campos = issue["fields"]
+            concluido = campos.get("resolutiondate")
+            chamados.append({
+                "chamado": issue["key"],
+                "mac": extrair_mac(campos.get("description")),
+                "aberto_em": converter_data_do_jira(campos["created"]),
+                "concluido_em": converter_data_do_jira(concluido) if concluido else None
+            })
+
+        proxima_pagina = corpo.get("nextPageToken")
+        if not proxima_pagina:
+            break
+
+    return chamados
+
+
+# fica so com os chamados que tem o MAC da maquina na descricao
+def montar_tabela_chamados(chamados_jira):
+    return [chamado for chamado in chamados_jira if chamado["mac"] is not None]
+
+
+def salvar_csv(bucket, caminho, linhas, colunas):
+    conteudo_csv = pd.DataFrame(linhas, columns=colunas).to_csv(index=False)
+
+    s3.put_object(
+        Bucket=bucket,
+        Key=caminho,
+        Body=conteudo_csv.encode("utf-8")
+    )
+
+    print(f"Arquivo salvo em: {caminho}")
+
+
+def atualizar_chamados():
+    bucket = os.getenv("BUCKET_S3")
+    if not bucket:
+        raise Exception("Falta a variável de ambiente BUCKET_S3")
+
+    tabela_chamados = montar_tabela_chamados(buscar_chamados_no_jira())
+
+    # salvar este arquivo e o que dispara a etlClient
+    salvar_csv(bucket, CAMINHO_CHAMADOS, tabela_chamados,
+               ["chamado", "mac", "aberto_em", "concluido_em"])
+
+    return len(tabela_chamados)
+
+
+# ==================================LAMBDA
+def lambda_handler(event, context):
+
+    # chamado pelo agendamento: atualiza os chamados do Jira
+    if "Records" not in event:
+        total = atualizar_chamados()
+        return {"statusCode": 200, "chamados_salvos": total}
+
+    processados = 0
+
+    for registro in event["Records"]:
+        bucket = registro["s3"]["bucket"]["name"]
+        #decodifica
+        caminho_processos = unquote_plus(registro["s3"]["object"]["key"])
+
+        # so CSV de processos da pasta raw 
+        if not caminho_processos.startswith(PREFIXO_ENTRADA) or not caminho_processos.endswith(".csv"):
+            continue
+
+        # o CSV de capturas do mesmo lote
+        caminho = gerar_caminho_capturas(caminho_processos)
+
+        df = ler_arquivo_s3(bucket, caminho)
 
         df = corrigirTipos(df)
 
         df = validar_dados(df)
 
-        df = adicionar_dados_processos(df, caminho);
+        df = adicionar_dados_processos(df, bucket, caminho)
 
-        salvar_trusted(df, caminho)
+        salvar_trusted(df, bucket, caminho)
+
+        processados += 1
+
+    return {"statusCode": 200, "arquivos_processados": processados}
 
 
-
-
+if __name__ == "__main__":
+    import sys
+    evento = {"Records": [{"s3": {"bucket": {"name": sys.argv[1]}, "object": {"key": sys.argv[2]}}}]}
+    print(lambda_handler(evento, None))
