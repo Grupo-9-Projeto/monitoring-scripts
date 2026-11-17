@@ -1,21 +1,17 @@
 import boto3
 import pandas as pd
 from io import BytesIO
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-BUCKET = os.getenv("S3_BUCKET")
-if not BUCKET:
-    raise RuntimeError("Variável de ambiente S3_BUCKET não definida.")
+from urllib.parse import unquote_plus
 
 s3 = boto3.client("s3")
 
+# O Lambda é disparado quando um CSV novo chega nesta pasta
+PREFIXO_ENTRADA = "trusted/dispositivos/capturas/"
+
 #----------------------------------Converte csv em df
-def ler_arquivo_s3(caminho_s3):
+def ler_arquivo_s3(bucket, caminho_s3):
     resposta = s3.get_object(
-        Bucket = BUCKET,
+        Bucket = bucket,
         Key=caminho_s3
     )
 
@@ -26,57 +22,6 @@ def ler_arquivo_s3(caminho_s3):
     )
 
     return df
-
-def listar_arquivos_s3(prefixo):
-
-    arquivos = set()
-
-    paginador = s3.get_paginator("list_objects_v2")
-
-    for pagina in paginador.paginate(
-        Bucket=BUCKET,
-        Prefix=prefixo
-    ):
-        for objeto in pagina.get("Contents", []):
-            arquivos.add(objeto["Key"])
-
-    return arquivos
-
-#-----------------------------------------------------------BUSCA CSVs
-
-def buscar_arquivos_pendentes(
-    prefixo_origem,
-    prefixo_destino,
-    extensao_origem=".csv",
-    extensao_destino=".json"
-):
-
-    arquivos_origem = listar_arquivos_s3(prefixo_origem)
-    arquivos_destino = listar_arquivos_s3(prefixo_destino)
-
-    pendentes = []
-
-    for caminho_origem in arquivos_origem:
-
-        if not caminho_origem.endswith(extensao_origem):
-            continue
-
-        caminho_destino = caminho_origem.replace(
-            prefixo_origem,
-            prefixo_destino,
-            1
-        )
-
-        caminho_destino = (
-            caminho_destino[:-len(extensao_origem)]
-            + extensao_destino
-        )
-
-        if caminho_destino not in arquivos_destino:
-            pendentes.append(caminho_origem)
-
-    return pendentes
-
 
 #-----------------------------------------------FILTRO CLIENT
 def filtra_colunas_df(df):
@@ -110,7 +55,7 @@ def gerar_caminho_client(caminho_trusted):
     return caminho_client
 
 
-def salvar_client(df, caminho_trusted):
+def salvar_client(df, bucket, caminho_trusted):
     caminho_client = gerar_caminho_client(caminho_trusted)
 
     conteudo_json = df.to_json(
@@ -126,7 +71,7 @@ def salvar_client(df, caminho_trusted):
 
     s3.upload_fileobj(
         buffer,
-        BUCKET,
+        bucket,
         caminho_client,
         ExtraArgs={
             "ContentType": "application/json"
@@ -135,19 +80,23 @@ def salvar_client(df, caminho_trusted):
 
     print(f"Arquivo salvo em: {caminho_client}")
 
-#MAIN
-if __name__ == "__main__":
+#LAMBDA
+# o S3 chama esta função toda vez que chega um CSV novo em trusted/dispositivos/capturas/
+def lambda_handler(event, context):
 
-    caminhos = buscar_arquivos_pendentes(
-        "trusted/dispositivos/capturas/", "client/dispositivos/capturas/"
-    )
+    for registro in event["Records"]:
 
-    print(f"Arquivos pendentes: {len(caminhos)}")
+        bucket = registro["s3"]["bucket"]["name"]
 
-    for caminho in caminhos:
+        #decodifica
+        caminho = unquote_plus(registro["s3"]["object"]["key"])
 
-        df = ler_arquivo_s3(caminho)
+        # so CSV da pasta trusted de capturas 
+        if not caminho.startswith(PREFIXO_ENTRADA) or not caminho.endswith(".csv"):
+            continue
+
+        df = ler_arquivo_s3(bucket, caminho)
 
         df = filtra_colunas_df(df)
 
-        salvar_client(df, caminho)
+        salvar_client(df, bucket, caminho)
