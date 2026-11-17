@@ -1,22 +1,17 @@
 import boto3
 import pandas as pd
 from io import BytesIO
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-BUCKET = os.getenv("S3_BUCKET")
-if not BUCKET:
-    raise RuntimeError("Variável de ambiente S3_BUCKET não definida.")
+from urllib.parse import unquote_plus
 
 s3 = boto3.client("s3")
 
+PREFIXO_ENTRADA = "raw/dispositivos/processos/"
+
 
 # ==============================LENDO S3
-def ler_arquivo_s3(caminho_s3):
+def ler_arquivo_s3(bucket, caminho_s3):
     resposta = s3.get_object(
-        Bucket = BUCKET,
+        Bucket = bucket,
         Key=caminho_s3
     )
 
@@ -27,56 +22,6 @@ def ler_arquivo_s3(caminho_s3):
     )
 
     return df
-
-def listar_arquivos_s3(prefixo):
-
-    arquivos = set()
-
-    paginador = s3.get_paginator("list_objects_v2")
-
-    for pagina in paginador.paginate(
-        Bucket=BUCKET,
-        Prefix=prefixo
-    ):
-        for objeto in pagina.get("Contents", []):
-            arquivos.add(objeto["Key"])
-
-    return arquivos
-
-
-
-def buscar_arquivos_pendentes(
-    prefixo_origem,
-    prefixo_destino,
-    extensao_origem=".csv",
-    extensao_destino=".csv"
-):
-
-    arquivos_origem = listar_arquivos_s3(prefixo_origem)
-    arquivos_destino = listar_arquivos_s3(prefixo_destino)
-
-    pendentes = []
-
-    for caminho_origem in arquivos_origem:
-
-        if not caminho_origem.endswith(extensao_origem):
-            continue
-
-        caminho_destino = caminho_origem.replace(
-            prefixo_origem,
-            prefixo_destino,
-            1
-        )
-
-        caminho_destino = (
-            caminho_destino[:-len(extensao_origem)]
-            + extensao_destino
-        )
-
-        if caminho_destino not in arquivos_destino:
-            pendentes.append(caminho_origem)
-
-    return pendentes
 
 # ===============================Corrigindo tipagem dos campos
 def corrige_datetime(df, coluna):
@@ -192,7 +137,7 @@ def validar_dados(df):
 #ADIÇÃO DE COLUNAS
 
 
-def adicionar_dados_processos(df, caminho_raw):
+def adicionar_dados_processos(df, bucket, caminho_raw):
 
     caminho_processos = caminho_raw.replace(
         "raw/dispositivos/capturas/",
@@ -204,7 +149,7 @@ def adicionar_dados_processos(df, caminho_raw):
         1
     )
 
-    df_processos = ler_arquivo_s3(caminho_processos)
+    df_processos = ler_arquivo_s3(bucket, caminho_processos)
 
     # Corrige os tipos de dados
     df_processos["timestamp_lote"] = pd.to_datetime(
@@ -252,6 +197,18 @@ def adicionar_dados_processos(df, caminho_raw):
 
 
 
+def gerar_caminho_capturas(caminho_processos):
+    return caminho_processos.replace(
+        "raw/dispositivos/processos/",
+        "raw/dispositivos/capturas/",
+        1
+    ).replace(
+        "processos_",
+        "dados_",
+        1
+    )
+
+
 def gerar_caminho_trusted(caminho_raw):
     caminho_trusted = caminho_raw.replace(
         "raw/", "trusted/", 1
@@ -260,7 +217,7 @@ def gerar_caminho_trusted(caminho_raw):
     return caminho_trusted
 
 
-def salvar_trusted(df, caminho_raw):
+def salvar_trusted(df, bucket, caminho_raw):
     buffer = BytesIO()
 
     caminho_trusted = gerar_caminho_trusted(caminho_raw)
@@ -274,30 +231,37 @@ def salvar_trusted(df, caminho_raw):
 
     s3.upload_fileobj(
         buffer,
-        BUCKET,
+        bucket,
         caminho_trusted
     )
 
     print(f"Arquivo salvo em: {caminho_trusted}")
 
 
-# ================================TESTE
-if __name__ == "__main__":
+# ================================LAMBDA
+# o S3 chama esta funcao toda vez que chega um CSV de processos novo em raw/dispositivos/processos/
+def lambda_handler(event, context):
 
-    caminhos = buscar_arquivos_pendentes("raw/dispositivos/capturas/", "trusted/dispositivos/capturas/")
+    for registro in event["Records"]:
 
-    for caminho in caminhos:
-        
-        df = ler_arquivo_s3(caminho)
+        bucket = registro["s3"]["bucket"]["name"]
+
+        #decodifica
+        caminho_processos = unquote_plus(registro["s3"]["object"]["key"])
+
+        # só CSV da pasta de processos
+        if not caminho_processos.startswith(PREFIXO_ENTRADA) or not caminho_processos.endswith(".csv"):
+            continue
+
+        # o CSV de capturas do mesmo lote
+        caminho = gerar_caminho_capturas(caminho_processos)
+
+        df = ler_arquivo_s3(bucket, caminho)
 
         df = corrigirTipos(df)
 
         df = validar_dados(df)
 
-        df = adicionar_dados_processos(df, caminho);
+        df = adicionar_dados_processos(df, bucket, caminho)
 
-        salvar_trusted(df, caminho)
-
-
-
-
+        salvar_trusted(df, bucket, caminho)
