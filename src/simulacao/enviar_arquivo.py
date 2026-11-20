@@ -10,7 +10,6 @@ PADRAO_NOME_ARQUIVO = re.compile(
 
 
 def formatar_mac(mac_sem_pontos: str) -> str:
-    """Converte 'AABBCC112201' de volta para 'AA:BB:CC:11:22:01'."""
     pares = [mac_sem_pontos[i : i + 2].upper() for i in range(0, 12, 2)]
     return ":".join(pares)
 
@@ -19,7 +18,6 @@ def enviar_pasta_simulada(
     pasta_base: str = "simulacoes_output",
     apagar_local_apos_envio: bool = False,
 ) -> None:
-    """Percorre a pasta de simulações e envia capturas e processos para o S3."""
     diretorio = Path(pasta_base)
 
     if not diretorio.exists():
