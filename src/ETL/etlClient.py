@@ -39,6 +39,19 @@ def filtra_colunas_df(df):
         "cpu_processo_maior_cpu"
     ]
 
+    # Acréscimo: colunas extras do mesmo JSON (identificação do equipamento, rede e flags de anomalia).
+    # Só entram se existirem no CSV trusted, para não quebrar arquivos gerados antes desta mudança.
+    colunas_extras = [
+        "Endereco MAC",
+        "Rede recebida(Mbps)",
+        "Rede enviada(Mbps)",
+        "anomalia_cpu",
+        "anomalia_ram",
+        "anomalia_disco",
+        "anomalia_rede"
+    ]
+    colunas = colunas + [c for c in colunas_extras if c in df.columns]
+
     df = df[colunas].copy()
     
     return df

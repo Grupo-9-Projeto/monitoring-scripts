@@ -7,6 +7,12 @@ s3 = boto3.client("s3")
 
 PREFIXO_ENTRADA = "raw/dispositivos/processos/"
 
+LIMIAR_ANOMALIA_CPU = 80.0     
+LIMIAR_ANOMALIA_RAM = 85.0     
+LIMIAR_ANOMALIA_DISCO = 90.0  
+LIMIAR_ANOMALIA_REDE = 500.0  
+LIMIAR_ANOMALIA_PERDA = 5.0   
+
 
 # ==============================LENDO S3
 def ler_arquivo_s3(bucket, caminho_s3):
@@ -84,6 +90,27 @@ def validar_mac(df, coluna):
         ~df[coluna].str.match(padrao, na=False),
         coluna
     ] = pd.NA
+
+    return df
+
+
+# ===================================MARCANDO ANOMALIAS 
+def marca_acima_limiar(serie, limiar):
+    marca = (serie >= limiar).astype("Int64")
+    marca[serie.isna()] = pd.NA
+    return marca
+
+
+def marcar_anomalias(df):
+    df["anomalia_cpu"] = marca_acima_limiar(df["cpu total(%)"], LIMIAR_ANOMALIA_CPU)
+    df["anomalia_ram"] = marca_acima_limiar(df["ram(%)"], LIMIAR_ANOMALIA_RAM)
+    df["anomalia_disco"] = marca_acima_limiar(df["disco(%)"], LIMIAR_ANOMALIA_DISCO)
+
+    trafego = df[["Rede recebida(Mbps)", "Rede enviada(Mbps)"]].max(axis=1, skipna=True)
+    perda = df["perda pacotes"]
+    rede = ((trafego >= LIMIAR_ANOMALIA_REDE) | (perda >= LIMIAR_ANOMALIA_PERDA)).astype("Int64")
+    rede[trafego.isna() & perda.isna()] = pd.NA
+    df["anomalia_rede"] = rede
 
     return df
 
@@ -261,6 +288,8 @@ def lambda_handler(event, context):
         df = corrigirTipos(df)
 
         df = validar_dados(df)
+
+        df = marcar_anomalias(df)
 
         df = adicionar_dados_processos(df, bucket, caminho)
 
