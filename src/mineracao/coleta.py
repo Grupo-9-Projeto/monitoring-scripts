@@ -88,8 +88,60 @@ def relatorio(timestamp):
     return [cpu, cpu_nucleos, ram, disco, data, mbps_download, mbps_upload, freq_uso_cpu, mac, descartados_sistema, tentativa_envio, corrompidos, dados_forcados, perda, data];
 
 
+# ======================================================================
+# DADO EXTERNO: temperatura do ambiente (API gratuita Open-Meteo, sem chave)
+# Acrescentado para o entregável "consumir dados externos".
+# Usa só a biblioteca padrão (urllib), então não precisa instalar nada.
+# ======================================================================
+import json
+import os
+import urllib.request
+
+CLIMA_VALIDADE_SEGUNDOS = 600      # reaproveita a resposta por 10 min (o loop lê a cada 10 s)
+CLIMA_REPETIR_SE_FALHAR = 60       # se a API falhar, só tenta de novo depois de 60 s
+CLIMA_TIMEOUT_SEGUNDOS = 5         # nunca deixa a captura travada esperando a API
+CLIMA_MANTER_ULTIMO_VALOR = 3600   # se a API cair, reaproveita o último valor por até 1 h
+
+_clima_cache = {"valor": "", "obtido_em": None, "proxima_tentativa": 0.0}
 
 
+def clima_externo():
+    """Temperatura atual (°C) do local do equipamento, vinda da Open-Meteo.
 
+    Devolve "" (vazio) quando não consegue obter, igual às métricas não
+    monitoradas do CSV. Nunca levanta exceção: a captura não pode parar por
+    causa de uma API externa.
+    Local: variáveis CLIMA_LATITUDE / CLIMA_LONGITUDE do .env (padrão: São Paulo).
+    """
+    agora = time.monotonic()
 
+    if agora < _clima_cache["proxima_tentativa"]:
+        return _clima_cache["valor"]
 
+    try:
+        latitude = os.getenv("CLIMA_LATITUDE", "-23.55")
+        longitude = os.getenv("CLIMA_LONGITUDE", "-46.63")
+        url = (
+            "https://api.open-meteo.com/v1/forecast"
+            f"?latitude={latitude}&longitude={longitude}&current=temperature_2m"
+        )
+
+        with urllib.request.urlopen(url, timeout=CLIMA_TIMEOUT_SEGUNDOS) as resposta:
+            dados = json.loads(resposta.read().decode("utf-8"))
+
+        temperatura = round(float(dados["current"]["temperature_2m"]), 1)
+
+        _clima_cache["valor"] = temperatura
+        _clima_cache["obtido_em"] = agora
+        _clima_cache["proxima_tentativa"] = agora + CLIMA_VALIDADE_SEGUNDOS
+
+    except Exception as erro:
+        print(f"Clima externo indisponível ({erro}). Coluna ficará vazia nesta leitura.")
+
+        obtido_em = _clima_cache["obtido_em"]
+        if obtido_em is None or agora - obtido_em > CLIMA_MANTER_ULTIMO_VALOR:
+            _clima_cache["valor"] = ""
+
+        _clima_cache["proxima_tentativa"] = agora + CLIMA_REPETIR_SE_FALHAR
+
+    return _clima_cache["valor"]

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import math
 from pathlib import Path
 import random
 import pandas as pd
@@ -19,6 +20,7 @@ COLUNAS_CAPTURA = [
     "perda pacotes",
     "timestamp_lote",
     "origem_dado",
+    "temperatura externa(C)",
 ]
 
 PROCESSOS_SIMULADOS = [
@@ -28,6 +30,15 @@ PROCESSOS_SIMULADOS = [
     "nginx",
     "node",
 ]
+
+
+def temperatura_simulada(dt: datetime) -> float:
+    """Temperatura SIMULADA do ambiente (curva diária: mínima ~6h, máxima ~15h).
+
+    Só para o simulador. Na captura real o valor vem da Open-Meteo.
+    """
+    curva = 24 + 9 * math.sin(2 * math.pi * (dt.hour + dt.minute / 60 - 9) / 24)
+    return round(curva + random.uniform(-0.8, 0.8), 1)
 
 
 def eh_horario_pico(dt: datetime) -> bool:
@@ -95,6 +106,7 @@ def gerar_lote_simulado(
             "perda pacotes": round(random.uniform(0.0, 2.5 if pico else 0.5), 2),
             "timestamp_lote": ts_lote_str,
             "origem_dado": "simulado",
+            "temperatura externa(C)": temperatura_simulada(dt_coleta),
         })
 
     df_processos = gerar_processos(mac=mac, inicio_lote=inicio_lote, fator=fator)

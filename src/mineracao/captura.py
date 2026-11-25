@@ -7,6 +7,7 @@ import os
 import sys
 import time
 from coleta import relatorio
+from coleta import clima_externo  # dado externo (temperatura do ambiente)
 import psutil
 from config import cursor
 from getmac import get_mac_address
@@ -106,6 +107,9 @@ def capturar_leitura(metricas_monitoradas, timestamp, timestamp_lote):
         dados.extend([""] * 5)
 
     dados.append(timestamp_lote.strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Dado externo: temperatura do ambiente (Open-Meteo). Vazio se a API falhar.
+    dados.append(clima_externo())
  
     return dados
  
@@ -127,7 +131,8 @@ def criar_cabecalho():
         "erros entrada",
         "erros saida",
         "perda pacotes",
-        "timestamp_lote"
+        "timestamp_lote",
+        "temperatura externa(C)"
     ]
  
     return cabecalho
@@ -215,6 +220,9 @@ def executar_captura():
             f"[{leitura[3]}] "
             f"Leitura coletada."
         )
+
+        # Mostra o dado externo coletado (prova de que a API está sendo consumida)
+        print(f"    Temperatura externa: {leitura[-1] if leitura[-1] != '' else 'indisponível'}")
  
         
         tempo_decorrido = (
