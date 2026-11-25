@@ -48,7 +48,8 @@ def filtra_colunas_df(df):
         "anomalia_cpu",
         "anomalia_ram",
         "anomalia_disco",
-        "anomalia_rede"
+        "anomalia_rede",
+        "temperatura externa(C)"  # dado externo (Open-Meteo)
     ]
     colunas = colunas + [c for c in colunas_extras if c in df.columns]
 
